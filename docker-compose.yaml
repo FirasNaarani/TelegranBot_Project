@@ -1,0 +1,52 @@
+version: '3.9'
+services:
+  mongo1:
+    image: mongo:5
+    container_name: mongo1
+    ports:
+      - "27017:27017"
+    networks:
+      - mongoCluster
+  mongo2:
+    image: mongo:5
+    container_name: mongo2
+    ports:
+      - "27018:27017"
+    networks:
+      - mongoCluster
+  mongo3:
+    image: mongo:5
+    container_name: mongo3
+    ports:
+      - "27019:27017"
+    networks:
+      - mongoCluster
+  yolo5:
+    image: alexey/yolo5:latest
+    container_name: yolo5
+    ports:
+      - "8081:8081"
+    environment:
+      BUCKET_NAME: alexey-yolo
+    networks:
+      - mongoCluster
+#  polybot:
+#    image: 933060838752.dkr.ecr.eu-north-1.amazonaws.com/nancyf_polybot:latest
+#    container_name: polybotnancy
+#    ports:
+#      - "8443:8443"
+#    environment:
+#      TELEGRAM_TOKEN: /run/secrets/telegram_token
+#      TELEGRAM_APP_URL: "https://b074-51-20-109-99.ngrok-free.app"
+#    networks:
+#      - mongoCluster
+#    secrets:
+#      - telegram_token
+
+networks:
+  mongoCluster:
+    driver: bridge
+
+secrets:
+  telegram_token:
+    file: telegram_token.txt
