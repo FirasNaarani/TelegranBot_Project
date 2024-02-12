@@ -52,6 +52,16 @@ services:
     command: ["bash", "-c", "/setup-replica.sh"]
     restart: "no"
 
+  yolo5:
+      build: ./yolo5
+      container_name: yolo5
+      ports:
+        - "8081:8081"
+      environment:
+        BUCKET_NAME: fnaarani-bucket
+      networks:
+        - mongoCluster
+
 networks:
   mongoCluster:
     driver: bridge
