@@ -1,52 +1,62 @@
 version: '3.9'
+
 services:
   mongo1:
     image: mongo:5
     container_name: mongo1
-    ports:
-      - "27017:27017"
     networks:
       - mongoCluster
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo1-data:/data/db
+    command: ["mongod", "--replSet", "rs0"]
+    restart: unless-stopped
+
   mongo2:
     image: mongo:5
     container_name: mongo2
-    ports:
-      - "27018:27017"
     networks:
       - mongoCluster
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo2-data:/data/db
+    command: ["mongod", "--replSet", "rs0"]
+    restart: unless-stopped
+
   mongo3:
     image: mongo:5
     container_name: mongo3
+    networks:
+      - mongoCluster
     ports:
       - "27019:27017"
+    volumes:
+      - mongo3-data:/data/db
+    command: ["mongod", "--replSet", "rs0"]
+    restart: unless-stopped
+
+  init-replica:
+    image: mongo:5
+    container_name: init-replica
     networks:
       - mongoCluster
-  yolo5:
-    image: alexey/yolo5:latest
-    container_name: yolo5
-    ports:
-      - "8081:8081"
-    environment:
-      BUCKET_NAME: alexey-yolo
-    networks:
-      - mongoCluster
-#  polybot:
-#    image: 933060838752.dkr.ecr.eu-north-1.amazonaws.com/nancyf_polybot:latest
-#    container_name: polybotnancy
-#    ports:
-#      - "8443:8443"
-#    environment:
-#      TELEGRAM_TOKEN: /run/secrets/telegram_token
-#      TELEGRAM_APP_URL: "https://b074-51-20-109-99.ngrok-free.app"
-#    networks:
-#      - mongoCluster
-#    secrets:
-#      - telegram_token
+    volumes:
+      - ./DB-setup/init-replica.js:/init-replica.js
+      - ./DB-setup/setup-replica.sh:/setup-replica.sh
+    depends_on:
+      - mongo1
+      - mongo2
+      - mongo3
+    command: ["bash", "-c", "/setup-replica.sh"]
+    restart: "no"
 
 networks:
   mongoCluster:
     driver: bridge
 
-secrets:
-  telegram_token:
-    file: telegram_token.txt
+volumes:
+  mongo1-data:
+  mongo2-data:
+  mongo3-data:
