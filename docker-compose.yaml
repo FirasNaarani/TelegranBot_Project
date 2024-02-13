@@ -2,62 +2,89 @@ version: '3.9'
 
 services:
   mongo1:
-    image: mongo:5
+    hostname: mongo1
     container_name: mongo1
-    networks:
-      - mongoCluster
+    image: mongo:5
     ports:
       - "27017:27017"
+    networks:
+      - mongoCluster
     volumes:
       - mongo1-data:/data/db
-    command: ["mongod", "--replSet", "rs0"]
+      - ./DB-setup/script.sh:/script.sh
+      - ./DB-setup/key:/key
     restart: unless-stopped
+    command: ["bash", "-c", "/script.sh"]
 
   mongo2:
-    image: mongo:5
+    hostname: mongo2
     container_name: mongo2
-    networks:
-      - mongoCluster
+    image: mongo:5
     ports:
       - "27018:27017"
+    networks:
+      - mongoCluster
     volumes:
       - mongo2-data:/data/db
-    command: ["mongod", "--replSet", "rs0"]
+      - ./DB-setup/script.sh:/script.sh
+      - ./DB-setup/key:/key
     restart: unless-stopped
+    command: ["bash", "-c", "/script.sh"]
 
   mongo3:
-    image: mongo:5
+    hostname: mongo3
     container_name: mongo3
-    networks:
-      - mongoCluster
+    image: mongo:5
     ports:
       - "27019:27017"
-    volumes:
-      - mongo3-data:/data/db
-    command: ["mongod", "--replSet", "rs0"]
-    restart: unless-stopped
-
-  init-replica:
-    image: mongo:5
-    container_name: init-replica
     networks:
       - mongoCluster
     volumes:
-      - ./DB-setup/init-replica.js:/init-replica.js
-      - ./DB-setup/init-db.js:/init-db.js
-      - ./DB-setup/setup-replica.sh:/setup-replica.sh
+      - mongo3-data:/data/db
+      - ./DB-setup/script.sh:/script.sh
+      - ./DB-setup/key:/key
+    restart: unless-stopped
+    command: ["bash", "-c", "/script.sh"]
+
+  setup:
+    hostname: setup
+    container_name: setup
+    image: mongo:5
+    ports:
+      - "27020:27017"
+    networks:
+      - mongoCluster
+    volumes:
+      - ./DB-setup/init.sh:/init.sh
+      - ./DB-setup/key:/key
+      - ./DB-setup/initiate.js:/initiate.js
+      - ./DB-setup/createUser.js:/createUser.js
+      - ./DB-setup/reconfig.js:/reconfig.js
     depends_on:
       - mongo1
       - mongo2
       - mongo3
-    command: ["bash", "-c", "/setup-replica.sh"]
-    restart: "no"
+    command: ["bash", "-c", "/init.sh"]
+
+  mongo-express:
+      image: mongo-express
+      depends_on:
+        - setup
+      container_name: mongo-express
+      ports:
+        - 8081:8081
+      networks:
+        - mongoCluster
+      environment:
+        ME_CONFIG_MONGODB_ADMINUSERNAME: "admin"
+        ME_CONFIG_MONGODB_ADMINPASSWORD: "admin"
+        ME_CONFIG_MONGODB_SERVER: "mongo1,mongo2,mongo3"
 
   yolo5:
       build: ./yolo5
       container_name: yolo5
       ports:
-        - "8081:8081"
+        - "8090:8090"
       environment:
         BUCKET_NAME: fnaarani-bucket
       networks:
@@ -71,3 +98,4 @@ volumes:
   mongo1-data:
   mongo2-data:
   mongo3-data:
+  DB-setup:
