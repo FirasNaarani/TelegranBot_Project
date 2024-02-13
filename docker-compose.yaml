@@ -44,6 +44,7 @@ services:
       - mongoCluster
     volumes:
       - ./DB-setup/init-replica.js:/init-replica.js
+      - ./DB-setup/init-db.js:/init-db.js
       - ./DB-setup/setup-replica.sh:/setup-replica.sh
     depends_on:
       - mongo1
