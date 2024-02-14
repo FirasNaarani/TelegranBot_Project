@@ -1,84 +1,88 @@
 version: '3.9'
 
 services:
-  mongo1:
-    hostname: mongo1
-    container_name: mongo1
+  mongo_1:
+    hostname: ${MONGO_DB1_NAME}
+    container_name: ${MONGO_DB1_NAME}
     image: mongo:5
     ports:
-      - "27017:27017"
+      - ${MONGO_DB1_PORT}:${MONGO_PORT}
     networks:
       - mongoCluster
     volumes:
-      - mongo1-data:/data/db
+      - mongo_1:/data/db
+      - ./.env:/root/.env
       - ./DB-setup/script.sh:/script.sh
-      - ./DB-setup/key:/key
+      - ./DB-setup/${KEY_FILE}:/${KEY_FILE}
     restart: unless-stopped
     command: ["bash", "-c", "/script.sh"]
 
-  mongo2:
-    hostname: mongo2
-    container_name: mongo2
+  mongo_2:
+    hostname: ${MONGO_DB2_NAME}
+    container_name: ${MONGO_DB2_NAME}
     image: mongo:5
     ports:
-      - "27018:27017"
+      - ${MONGO_DB2_PORT}:${MONGO_PORT}
     networks:
       - mongoCluster
     volumes:
-      - mongo2-data:/data/db
+      - mongo_2:/data/db
+      - ./.env:/root/.env
       - ./DB-setup/script.sh:/script.sh
-      - ./DB-setup/key:/key
+      - ./DB-setup/${KEY_FILE}:/${KEY_FILE}
     restart: unless-stopped
     command: ["bash", "-c", "/script.sh"]
 
-  mongo3:
-    hostname: mongo3
-    container_name: mongo3
+  mongo_3:
+    hostname: ${MONGO_DB3_NAME}
+    container_name: ${MONGO_DB3_NAME}
     image: mongo:5
     ports:
-      - "27019:27017"
+      - ${MONGO_DB3_PORT}:${MONGO_PORT}
     networks:
       - mongoCluster
     volumes:
-      - mongo3-data:/data/db
+      - mongo_3:/data/db
+      - ./.env:/root/.env
       - ./DB-setup/script.sh:/script.sh
-      - ./DB-setup/key:/key
+      - ./DB-setup/${KEY_FILE}:/${KEY_FILE}
     restart: unless-stopped
     command: ["bash", "-c", "/script.sh"]
 
-  setup:
-    hostname: setup
-    container_name: setup
+  init_setup:
+    hostname: ${MONGO_SETUP_NAME}
+    container_name: ${MONGO_SETUP_NAME}
     image: mongo:5
     ports:
-      - "27020:27017"
+      - ${MONGO_SETUP_PORT}:${MONGO_PORT}
     networks:
       - mongoCluster
     volumes:
+      - ./.env:/root/.env
       - ./DB-setup/init.sh:/init.sh
-      - ./DB-setup/key:/key
+      - ./DB-setup/${KEY_FILE}:/${KEY_FILE}
       - ./DB-setup/initiate.js:/initiate.js
       - ./DB-setup/createUser.js:/createUser.js
       - ./DB-setup/reconfig.js:/reconfig.js
     depends_on:
-      - mongo1
-      - mongo2
-      - mongo3
+      - mongo_1
+      - mongo_2
+      - mongo_3
     command: ["bash", "-c", "/init.sh"]
 
   mongo-express:
       image: mongo-express
       depends_on:
-        - setup
+        - init_setup
       container_name: mongo-express
       ports:
         - 8081:8081
       networks:
         - mongoCluster
       environment:
-        ME_CONFIG_MONGODB_ADMINUSERNAME: "admin"
-        ME_CONFIG_MONGODB_ADMINPASSWORD: "admin"
-        ME_CONFIG_MONGODB_SERVER: "mongo1,mongo2,mongo3"
+        ME_CONFIG_MONGODB_ADMINUSERNAME: ${ADMIN_USER}
+        ME_CONFIG_MONGODB_ADMINPASSWORD: ${ADMIN_PASS}
+        ME_CONFIG_MONGODB_SERVER: ${MONGO_SERVER}
 
   yolo5:
       build: ./yolo5
@@ -95,7 +99,8 @@ networks:
     driver: bridge
 
 volumes:
-  mongo1-data:
-  mongo2-data:
-  mongo3-data:
+  .env:
+  mongo_1:
+  mongo_2:
+  mongo_3:
   DB-setup:

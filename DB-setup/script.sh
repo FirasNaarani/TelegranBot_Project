@@ -1,5 +1,6 @@
 # change owner & permission of a key file 
 #!/bin/bash
-chmod 400 /key
-chown 999:999 /key
-mongod --replSet rs0 --bind_ip_all --keyFile /key
+source /root/.env
+chmod 400 /$KEY_FILE
+chown 999:999 /$KEY_FILE
+mongod --replSet $REPLICA_SET --bind_ip_all --keyFile /$KEY_FILE
