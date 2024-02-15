@@ -19,27 +19,17 @@ app = Flask(__name__)
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    # Generates a UUID for this current prediction HTTP request. This id can be used as a reference in logs to identify and track individual prediction requests.
     prediction_id = str(uuid.uuid4())
-
     logger.info(f'prediction: {prediction_id}. start processing')
-
-    # Receives a URL parameter representing the image to download from S3
     img_name = request.args.get('imgName')
 
-    # TODO download img_name from S3, store the local image path in original_img_path
-    #  The bucket name should be provided as an env var BUCKET_NAME.
-
     bucket_name = os.getenv('BUCKET_NAME')
-
     original_img_path = str(img_name)
 
     s3 = boto3.client('s3')
     s3.download_file(bucket_name, img_name, original_img_path)
-
     logger.info(f'prediction: {prediction_id}/{original_img_path}. Download img completed')
 
-    # Predicts the objects in the image
     run(
         weights='yolov5s.pt',
         data='data/coco128.yaml',
@@ -50,17 +40,11 @@ def predict():
     )
 
     logger.info(f'prediction: {prediction_id}/{original_img_path}. done')
-
-    # This is the path for the predicted image with labels
-    # The predicted image typically includes bounding boxes drawn around the detected objects, along with class labels and possibly confidence scores.
     predicted_img_path = Path(f'static/data/{prediction_id}/{original_img_path}')
-
-    # TODO Uploads the predicted image (predicted_img_path) to S3 (be careful not to override the original image).
 
     the_image = original_img_path[:-4] + "_predicted.jpg"
     s3.upload_file(str(predicted_img_path), bucket_name, the_image)
 
-    # Parse prediction labels and create a summary
     pred_summary_path = Path(f'static/data/{prediction_id}/labels/{original_img_path.split(".")[0]}.txt')
     if pred_summary_path.exists():
         with open(pred_summary_path) as f:
@@ -84,14 +68,11 @@ def predict():
             'time': time.time()
         }
 
-        # Store the prediction_summary in MongoDB
         client = pymongo.MongoClient("mongodb://mongo1:27017/")
         db = client["mongodb"]
         collection = db["prediction"]
 
         inserted_id = collection.insert_one(prediction_summary).inserted_id
-
-        # Now convert the ObjectId to str for JSON serialization
         prediction_summary['_id'] = str(inserted_id)
 
         return jsonify(prediction_summary)

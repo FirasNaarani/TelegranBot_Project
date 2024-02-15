@@ -1,3 +1,4 @@
+import requests
 import telebot
 from loguru import logger
 import os
@@ -84,3 +85,33 @@ class ObjectDetectionBot(Bot):
             # TODO upload the photo to S3
             # TODO send a request to the `yolo5` service for prediction
             # TODO send results to the Telegram end-user
+
+import boto3
+
+class ObjectDetectionBot(Bot):
+    def __init__(self, token, telegram_chat_url, bucket_name):
+        super().__init__(token, telegram_chat_url)
+        self.s3_client = boto3.client('s3')
+        self.bucket_name = bucket_name
+
+    def handle_message(self, msg):
+        logger.info(f'Incoming message: {msg}')
+
+        if self.is_current_msg_photo(msg):
+            # Download the user photo
+            local_img_path = self.download_user_photo(msg)
+
+            # Upload the photo to S3
+            s3_img_path = f"{msg['chat']['id']}/{os.path.basename(local_img_path)}"
+            self.s3_client.upload_file(local_img_path, self.bucket_name, s3_img_path)
+
+            # Send a request to the `yolo5` service for prediction
+            # This part depends on how your `yolo5` service is set up.
+            # Assuming it's a REST API that takes an image URL and returns a prediction.
+            yolo5_service_url = "http://your-yolo5-service-url/predict"
+            image_url = f"https://{self.bucket_name}.s3.amazonaws.com/{s3_img_path}"
+            response = requests.post(yolo5_service_url, json={"image_url": image_url})
+            prediction = response.json()
+
+            # Send results to the Telegram end-user
+            self.send_text(msg['chat']['id'], f"Prediction: {prediction}")
