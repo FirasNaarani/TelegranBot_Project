@@ -11,9 +11,10 @@ services:
       - mongoCluster
     volumes:
       - mongo_1:/data/db
-      - ./.env:/root/.env
       - ./DB-setup/script.sh:/script.sh
       - ./DB-setup/${KEY_FILE}:/${KEY_FILE}
+    secrets:
+      - my_secret
     restart: unless-stopped
     command: ["bash", "-c", "/script.sh"]
 
@@ -27,9 +28,10 @@ services:
       - mongoCluster
     volumes:
       - mongo_2:/data/db
-      - ./.env:/root/.env
       - ./DB-setup/script.sh:/script.sh
       - ./DB-setup/${KEY_FILE}:/${KEY_FILE}
+    secrets:
+      - my_secret
     restart: unless-stopped
     command: ["bash", "-c", "/script.sh"]
 
@@ -43,9 +45,10 @@ services:
       - mongoCluster
     volumes:
       - mongo_3:/data/db
-      - ./.env:/root/.env
       - ./DB-setup/script.sh:/script.sh
       - ./DB-setup/${KEY_FILE}:/${KEY_FILE}
+    secrets:
+      - my_secret
     restart: unless-stopped
     command: ["bash", "-c", "/script.sh"]
 
@@ -58,12 +61,13 @@ services:
     networks:
       - mongoCluster
     volumes:
-      - ./.env:/root/.env
       - ./DB-setup/init.sh:/init.sh
       - ./DB-setup/${KEY_FILE}:/${KEY_FILE}
       - ./DB-setup/initiate.js:/initiate.js
       - ./DB-setup/createUser.js:/createUser.js
       - ./DB-setup/reconfig.js:/reconfig.js
+    secrets:
+      - my_secret
     depends_on:
       - mongo_1
       - mongo_2
@@ -79,6 +83,8 @@ services:
         - 8081:8081
       networks:
         - mongoCluster
+      secrets:
+      - my_secret
       environment:
         ME_CONFIG_MONGODB_ADMINUSERNAME: ${ADMIN_USER}
         ME_CONFIG_MONGODB_ADMINPASSWORD: ${ADMIN_PASS}
@@ -104,3 +110,6 @@ volumes:
   mongo_2:
   mongo_3:
   DB-setup:
+secrets:
+  my_secret:
+    file: ./.env

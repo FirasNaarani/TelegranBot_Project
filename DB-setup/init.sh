@@ -1,6 +1,6 @@
 # change owner & permission of a key file 
 #!/bin/bash
-source /root/.env
+source /run/secrets/my_secret
 sleep 10
 chmod 400 /$KEY_FILE
 chown 999:999 /$KEY_FILE
