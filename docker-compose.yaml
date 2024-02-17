@@ -99,6 +99,9 @@ services:
         BUCKET_NAME: ${BUCKET_NAME}
       networks:
         - mongoCluster
+      environments:
+        - AWS_ACCESS_KEY_ID: ${AWS_KEY_ID}
+        - AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_KEY}
       secrets:
         - my_secret
 
