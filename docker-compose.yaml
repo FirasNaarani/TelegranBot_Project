@@ -16,7 +16,7 @@ services:
     secrets:
       - my_secret
     restart: unless-stopped
-    command: ["bash", "-c", "/script.sh"]
+    command: [ "bash", "-c", "/script.sh" ]
 
   mongo_2:
     hostname: ${MONGO_DB2_NAME}
@@ -33,7 +33,7 @@ services:
     secrets:
       - my_secret
     restart: unless-stopped
-    command: ["bash", "-c", "/script.sh"]
+    command: [ "bash", "-c", "/script.sh" ]
 
   mongo_3:
     hostname: ${MONGO_DB3_NAME}
@@ -50,7 +50,7 @@ services:
     secrets:
       - my_secret
     restart: unless-stopped
-    command: ["bash", "-c", "/script.sh"]
+    command: [ "bash", "-c", "/script.sh" ]
 
   init_setup:
     hostname: ${MONGO_SETUP_NAME}
@@ -72,48 +72,50 @@ services:
       - mongo_1
       - mongo_2
       - mongo_3
-    command: ["bash", "-c", "/init.sh"]
+    command: [ "bash", "-c", "/init.sh" ]
 
   mongo-express:
-      image: mongo-express
-      depends_on:
-        - init_setup
-      container_name: mongo-express
-      ports:
-        - 8081:8081
-      networks:
-        - mongoCluster
-      secrets:
-        - my_secret
-      environment:
-        ME_CONFIG_MONGODB_ADMINUSERNAME: ${ADMIN_USER}
-        ME_CONFIG_MONGODB_ADMINPASSWORD: ${ADMIN_PASS}
-        ME_CONFIG_MONGODB_SERVER: ${MONGO_SERVER}
-
-  yolo5:
-      build: ./yolo5
-      container_name: yolo5
-      ports:
-        - 8090:8081
-      environment:
-        BUCKET_NAME: ${BUCKET_NAME}
-      networks:
-        - mongoCluster
-      environments:
-        - AWS_ACCESS_KEY_ID: ${AWS_KEY_ID}
-        - AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_KEY}
-      secrets:
-        - my_secret
-
-  polybot:
-    build: ./polybot
-    container_name: polybot
+    image: mongo-express
+    depends_on:
+      - init_setup
+    container_name: mongo-express
     ports:
-      - 8443:8443
-    volumes:
-      - .:/app
+      - "8081:8081"
+    networks:
+      - mongoCluster
     secrets:
       - my_secret
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${ADMIN_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${ADMIN_PASS}
+      ME_CONFIG_MONGODB_SERVER: ${MONGO_SERVER}
+
+  yolo5:
+    image: firasnaarani/yolov5:1.2
+    container_name: yolo5
+    ports:
+      - "4000:4000"
+    networks:
+      - mongoCluster
+    environment:
+      BUCKET_NAME: ${BUCKET_NAME}
+      AWS_ACCESS_KEY_ID: ${AWS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_KEY}
+      CONNECTION_STRING: ${CONNECTION_STRING}
+      MONGO_USER: ${ADMIN_USER}
+      MONGO_PASS: ${ADMIN_PASS}
+    secrets:
+      - my_secret
+
+  # polybot:
+  #   build: ./polybot
+  #   container_name: polybot
+  #   ports:
+  #     - 8443:8443
+  #   volumes:
+  #     - .:/app
+  #   secrets:
+  #     - my_secret
 
 networks:
   mongoCluster:

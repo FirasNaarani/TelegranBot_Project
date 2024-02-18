@@ -28,5 +28,8 @@ try {
     };
     rs.initiate(cfg);
 } catch (error) {
-    throw new Error('Failed to initiate: ' + error.message);
+    if (error.message.includes('already')) {
+    } else {
+        throw new Error('Failed to initiate: ' + error.message);
+    }
 }
