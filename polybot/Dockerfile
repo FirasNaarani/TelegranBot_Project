@@ -1,9 +1,11 @@
-FROM python:3.8-slim-buster
+FROM python
 WORKDIR /app
-COPY . /app
+RUN pip install --upgrade pip
+COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
+
 EXPOSE 8443
 
-COPY . .
+ENTRYPOINT ["python3"]
 
-CMD ["python3", "app.py"]
+CMD ["app.py"]

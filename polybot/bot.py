@@ -7,8 +7,9 @@ from loguru import logger
 from telebot.types import InputFile
 from botocore.exceptions import ClientError
 
-URL = os.environ['YOLO_URL']
+URL_YOLO = os.environ['YOLO_URL']
 IMAGES_BUCKET = os.environ['BUCKET_NAME']
+
 
 class Bot:
 
@@ -23,7 +24,7 @@ class Bot:
 
         # set the webhook URL
         self.telegram_bot_client.set_webhook(
-            URL=f'{telegram_chat_url}/{token}/', timeout=60)
+            url=f'{telegram_chat_url}/{token}/', timeout=60)
 
         logger.info(
             f'Telegram Bot information\n\n{self.telegram_bot_client.get_me()}')
@@ -104,7 +105,7 @@ class ObjectDetectionBot(Bot):
                 return False
             # TODO send a request to the `yolo5` service for prediction localhost:8081/predict?imgName=nfb
             response = requests.post(
-                f"{URL}/predict?imgName=bot/received/{os.path.basename(file_path)}")
+                f"{URL_YOLO}/predict?imgName=bot/received/{os.path.basename(file_path)}")
             # TODO send results to the Telegram end-user
             if response.ok:
                 data = response.json()
@@ -132,5 +133,5 @@ class Util:
         else:
             result = '.:: Detected Objects ::.\n'
             for key, val in class_count.items():
-                result += f"\t{key}\t-->\t{val}\n"
+                result += f"\t{key}\t>>>\t{val}\n"
             return result
