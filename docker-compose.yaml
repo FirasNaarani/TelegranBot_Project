@@ -103,18 +103,18 @@ services:
       - mongoCluster
     environment:
       BUCKET_NAME: ${BUCKET_NAME}
-      AWS_ACCESS_KEY_ID: ${AWS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_KEY}
       CONNECTION_STRING: ${CONNECTION_STRING}
       MONGO_USER: ${ADMIN_USER}
       MONGO_PASS: ${ADMIN_PASS}
+    volumes:
+      - ${AWS_CONF}:/root/.aws
     secrets:
       - my_secret
 
   polybot:
     depends_on:
       - yolo5
-    image: firasnaarani/polybot
+    image: firasnaarani/polybot:1.1
     container_name: polybot
     hostname: polybot
     ports:
@@ -126,8 +126,8 @@ services:
       YOLO_URL: ${YOLO_URL}
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
       TELEGRAM_APP_URL: ${TELEGRAM_APP_URL}
-      AWS_ACCESS_KEY_ID: ${AWS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_KEY}
+    volumes:
+      - ${AWS_CONF}:/root/.aws
     secrets:
       - my_secret
 
