@@ -11,19 +11,19 @@ from loguru import logger
 from mongoServerApi import mongoAPI
 from bson import json_util
 
-images_bucket = os.environ['BUCKET_NAME']
-mongo_user = os.environ['MONGO_USER']
-mongo_pass = os.environ['MONGO_PASS']
-database = 'images'
-collection = 'predictions'
+IMAGES_BUCKET = os.environ['BUCKET_NAME']
+MONGO_USER = os.environ['MONGO_USER']
+MONGO_PASS = os.environ['MONGO_PASS']
+DATABASE = 'images'
+COLLECTION = 'predictions'
 
-with open("data/coco128.yaml", "r") as stream:
+with open("data/coco128.yaml", "rb") as stream:
     names = yaml.safe_load(stream)['names']
 
 app = Flask(__name__)
 
 
-@app.route('/predict', methods=['POST'])
+@app.route('/predict', methods=['POST', 'GET'])
 def predict():
     # Generates a UUID for this current prediction HTTP request. This id can be used as a reference in logs to identify and track individual prediction requests.
     prediction_id = str(uuid.uuid4())
@@ -41,8 +41,9 @@ def predict():
         if not os.path.exists('Images'):
             os.mkdir('Images')
 
-        s3.download_file(images_bucket, img_name, f'Images/{img_name}')
-        original_img_path = f"Images/{img_name}"
+        s3.download_file(IMAGES_BUCKET, img_name,
+                            f"Images/{os.path.basename(img_name)}")
+        original_img_path = f"Images/{os.path.basename(img_name)}"
         logger.info(
             f'prediction: {prediction_id}/{original_img_path}. Download img completed')
     except:
@@ -67,8 +68,8 @@ def predict():
         f"static/data/{prediction_id}/{original_img_path.split('/')[-1]}")
 
     try:
-        s3.upload_file(predicted_img_path, bucket_name,
-                        f"static/{prediction_id}/{os.path.basename(predicted_img_path)}")
+        s3.upload_file(predicted_img_path, IMAGES_BUCKET,
+                            f"static/{prediction_id}/{os.path.basename(predicted_img_path)}")
         logger.info(
             f'prediction: {prediction_id}/{original_img_path}. Upload img completed')
     except:
@@ -76,7 +77,7 @@ def predict():
 
     # Parse prediction labels and create a summary
     pred_summary_path = Path(
-        f"static/data/{prediction_id}/labels/{img_name.split('.')[0]}.txt")
+        f"static/data/{prediction_id}/labels/{os.path.basename(img_name).split('.')[0]}.txt")
     if pred_summary_path.exists():
         with open(pred_summary_path) as f:
             labels = f.read().splitlines()
@@ -102,7 +103,7 @@ def predict():
 
         try:
             data = json.loads(json_util.dumps(prediction_summary))
-            conn = mongoAPI(mongo_user,mongo_pass,database,collection)
+            conn = mongoAPI(MONGO_USER, MONGO_PASS, DATABASE, COLLECTION)
             conn.insert_prediction(data)
         except:
             logger.warning("Error while saving prediction info into MongoDB.")
