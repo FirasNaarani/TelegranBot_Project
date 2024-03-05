@@ -11,6 +11,7 @@ from loguru import logger
 from mongoServerApi import mongoAPI
 from bson import json_util
 
+PORT = os.environ['PORT']
 IMAGES_BUCKET = os.environ['BUCKET_NAME']
 MONGO_USER = os.environ['MONGO_USER']
 MONGO_PASS = os.environ['MONGO_PASS']
@@ -34,7 +35,6 @@ def predict():
         return jsonify({"error": "No image name provided"}), 400
 
     try:
-        bucket_name = os.getenv('BUCKET_NAME')
         s3 = boto3.client('s3')
 
         # create directory if it does not exist
@@ -114,4 +114,4 @@ def predict():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=4000)
+    app.run(host='0.0.0.0', port=PORT)

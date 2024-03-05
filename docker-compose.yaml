@@ -98,7 +98,7 @@ services:
     container_name: yolo5
     hostname: yolo5
     ports:
-      - "4000:4000"
+      - "${PORT_YOLO}:${PORT_YOLO}"
     networks:
       - mongoCluster
     environment:
@@ -106,19 +106,33 @@ services:
       CONNECTION_STRING: ${CONNECTION_STRING}
       MONGO_USER: ${ADMIN_USER}
       MONGO_PASS: ${ADMIN_PASS}
+      PORT: ${PORT_YOLO}
     volumes:
       - ${AWS_CONF}:/root/.aws
     secrets:
       - my_secret
 
+  ngrok:
+      image: ngrok/ngrok
+      container_name: ngrok
+      hostname: ngrok
+      environment:
+        NGROK_AUTHTOKEN: ${NGROK_AUTH_TOKEN}
+      secrets:
+        - my_secret
+      command: ["http","--domain=${DOMAIN}","polybot:${PORT_POLYBOT}"]
+      networks:
+        - mongoCluster
+
   polybot:
     depends_on:
       - yolo5
-    image: firasnaarani/polybot:1.1
+      - ngrok
+    image: firasnaarani/polybot
     container_name: polybot
     hostname: polybot
     ports:
-      - 8443:8443
+      - ${PORT_POLYBOT}:${PORT_POLYBOT}
     networks:
       - mongoCluster
     environment:
@@ -126,8 +140,11 @@ services:
       YOLO_URL: ${YOLO_URL}
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
       TELEGRAM_APP_URL: ${TELEGRAM_APP_URL}
+      GPT_KEY: ${GPT_KEY}
     volumes:
       - ${AWS_CONF}:/root/.aws
+      - D:\GitHub\telegram-bot\polybot\app.py:/app/app.py
+      - D:\GitHub\telegram-bot\polybot\bot.py:/app/bot.py
     secrets:
       - my_secret
 
